@@ -129,7 +129,13 @@ def print_signal_info(label: str = "current"):
     distinguish in the log (e.g. ``"pre-fit"``, ``"post-fit"``).
     """
     log_header(f"SignalHandlers ({label})")
-    for sig in (signal.SIGUSR1, signal.SIGUSR2, signal.SIGCONT, signal.SIGTERM):
+    for sig_name in ("SIGUSR1", "SIGUSR2", "SIGCONT", "SIGTERM"):
+        sig = getattr(signal, sig_name, None)
+        if sig is None:
+            # Windows exposes no SIGUSR1/SIGUSR2/SIGCONT; requeue signals are
+            # SLURM-only anyway, so just report their absence.
+            logging.info(f"  {sig_name:<8} → (not available on this platform)")
+            continue
         logging.info(f"  {sig.name:<8} → {_describe_handler(signal.getsignal(sig))}")
 
 
