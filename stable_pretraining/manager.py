@@ -1662,12 +1662,16 @@ class Manager(submitit.helpers.Checkpointable):
 
         if exp.offline:
             previous_run = self._wandb_previous_dir(wandb_logger)
-            logging.info(f"  Found a previous run ({previous_run}), reusing config")
-            with open(previous_run / "files/wandb-config.json", "r") as f:
-                last_config = json.load(f)
-            # at most last_config has an extra `ckpt_path`
-            exp.config.update(last_config)
-            logging.info("  reloaded!")
+            if previous_run is None:
+                # First offline run in this dir — nothing to reuse.
+                logging.info("  No previous offline run found, starting fresh")
+            else:
+                logging.info(f"  Found a previous run ({previous_run}), reusing config")
+                with open(previous_run / "files/wandb-config.json", "r") as f:
+                    last_config = json.load(f)
+                # at most last_config has an extra `ckpt_path`
+                exp.config.update(last_config)
+                logging.info("  reloaded!")
         elif WANDB_AVAILABLE and wandb.run and len(wandb.config.keys()):
             logging.info("  a Wandb config is provided, not uploading Hydra's:")
         else:
